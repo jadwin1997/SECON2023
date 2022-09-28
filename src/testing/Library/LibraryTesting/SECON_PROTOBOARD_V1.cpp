@@ -2,7 +2,7 @@
 #include "SECON_PROTOBOARD_V1.h"
 #define ir A7
 #define model 20150
-SharpIR SharpIR( SharpIR::GP2Y0A02YK0F, ir);
+SharpIR SharpIR( ir,model);
 
 
 
@@ -77,7 +77,7 @@ int * ProtoBoard::updateDistance(){
   // Calculating the distance
   distance1 = int((duration1/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
   distance2 = int((duration2/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
-  distance3 = SharpIR.getDistance();
+  distance3 = SharpIR.distance();
 
   r[0]=distance1;
   r[1]=distance2;
