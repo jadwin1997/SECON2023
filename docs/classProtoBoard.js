@@ -1,0 +1,27 @@
+var classProtoBoard =
+[
+    [ "ProtoBoard", "classProtoBoard.html#ae578dc23edbb454df88ccc4077f5e6e8", null ],
+    [ "setupBoard", "classProtoBoard.html#a9ff3846c618c34b41c84b063e58c0ea6", null ],
+    [ "updateDistance", "classProtoBoard.html#aff0aa2796c9cb86d9243a2903dc2504f", null ],
+    [ "updateGyro", "classProtoBoard.html#a4f8d9b858dfc9b478d577561b46beff8", null ],
+    [ "angle", "classProtoBoard.html#a8ea4d87d765c0215f57ec6213227f5c0", null ],
+    [ "currentTime", "classProtoBoard.html#adbea71f475cf8133b845ffa429d71118", null ],
+    [ "distance1", "classProtoBoard.html#adc46193a167a69b129f3ab5f74ee8d04", null ],
+    [ "distance2", "classProtoBoard.html#a5ca52c9e56980696e6bad54eb182d01d", null ],
+    [ "distance3", "classProtoBoard.html#ac6c36462f635e696059303bac3c5fe33", null ],
+    [ "duration1", "classProtoBoard.html#a50461229e9f3f6832317255e98b368f8", null ],
+    [ "duration2", "classProtoBoard.html#ad0134359bc97396bdb45c97d652cc8cf", null ],
+    [ "elapsedTime", "classProtoBoard.html#a40296cfd4320a212421452c84017d282", null ],
+    [ "GyZ", "classProtoBoard.html#a88760738dc8bf570f6cb5c80555d72e1", null ],
+    [ "in1", "classProtoBoard.html#aa65b5b287a2ac8894ed0742ed0354dad", null ],
+    [ "in2", "classProtoBoard.html#a6c5659bedc8ba8c7e390f295ac2574eb", null ],
+    [ "in3", "classProtoBoard.html#a2305799588ab29098ca6fe3037b0e803", null ],
+    [ "in4", "classProtoBoard.html#a3f9e8bd0381edc8bc9dd60b04ec27c39", null ],
+    [ "leftpwm", "classProtoBoard.html#a44d20dea7421f7369ced4d8f21ff4fa3", null ],
+    [ "MPU_addr", "classProtoBoard.html#a41a4c43e2e5c718e6af47131ac2bbe0c", null ],
+    [ "offset", "classProtoBoard.html#aa6b3e8af618718bcea7495b9ace56086", null ],
+    [ "previousTime", "classProtoBoard.html#af41c30aa47aa5ce48c6aebf5c5382140", null ],
+    [ "rightpwm", "classProtoBoard.html#a8d6b4be4d9025f60e2ea174192174652", null ],
+    [ "target_angle", "classProtoBoard.html#a81e40c87510432a1a0b0d63f58837c81", null ],
+    [ "target_speed", "classProtoBoard.html#a909ba71b845ebbfcaca56dc0b9049621", null ]
+];
