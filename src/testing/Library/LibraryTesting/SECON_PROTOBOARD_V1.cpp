@@ -46,7 +46,7 @@ void ProtoBoard::setupBoard(){
   Serial.begin(9600);
 
   //button
-  pinMode(7,INPUT_PULLUP);
+  
 
 }
 
@@ -102,7 +102,19 @@ int16_t ProtoBoard::updateGyro(){
   GyZ=GyZ-offset;
 }
 
-
+void ProtoBoard::driveMotor(int motor_pin, int motor_speed){
+  if(motor_speed < 0){
+    motor_speed = 0;
+  }
+  if(motor_pin == 0){
+    analogWrite(rightpwm,motor_speed);
+  }
+   if(motor_pin > 0){
+    analogWrite(leftpwm,motor_speed);
+    
+  }
+  
+}
 
 
 

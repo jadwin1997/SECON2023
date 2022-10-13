@@ -20,8 +20,10 @@ class ProtoBoard
    ProtoBoard();
 
     void setupBoard();
+    void driveMotor(int motor_pin, int motor_speed);
     int * updateDistance();
     int16_t updateGyro();
+    
     /**
     * @brief I2C address of the MPU-6050
     **/
