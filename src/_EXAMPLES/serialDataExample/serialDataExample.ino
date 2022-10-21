@@ -1,4 +1,4 @@
-//This code will read a message from the user in the form "x(some number}" and blink the LED with that size delay.
+//This code will read a message from the user in the form "x(some number)" and blink the LED with that size delay.
 
 void setup() {
   // put your setup code here, to run once:
