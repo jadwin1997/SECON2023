@@ -7,11 +7,12 @@
 
 Servo::Servo() : pwm()
 {
-    // this shouldn't ever be called; it is only defined because the
-    // ServoController class maintains an array of servos, and the compiler
-    // gets upset if there is no default constructor.
-    //
-    // it's probably possible to get around this? todo.
+    /*
+    this shouldn't ever be called; it is only defined because the
+    compiler gets upset if there is no default constructor.
+
+    it's probably possible to get around this? todo.
+    */
     port = 255;
     target = 0;
     min = 1;
