@@ -10,7 +10,7 @@ SharpIR SharpIR(ir, model);
 
 const int MPU_addr=0x68;  // I2C address of the MPU-6050
 int16_t GyZ;
-float elapsedTime, currentTime, previousTime,angle = 0.0, target_angle,offset = 0;
+float elapsedTime, currentTime, previousTime,angle = 0.0, target_angle,offset = 0,zangle = 0.0;
 
 //target speed to go straight.
 int target_speed = 70;
@@ -101,33 +101,29 @@ void loop(){
   //digitalWrite(4, LOW);
   // Reads the echoPin, returns the sound wave travel time in microseconds
   duration1 = pulseIn(9, HIGH);
-  //duration2 = pulseIn(5, HIGH);
   delayMicroseconds(10);
-  //digitalWrite(2, LOW);
+
   digitalWrite(6, LOW);
   delayMicroseconds(2);
   // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
-  //digitalWrite(2, HIGH);
+
   digitalWrite(6, HIGH);
   delayMicroseconds(10);
-  //digitalWrite(2, LOW);
+
   digitalWrite(6, LOW);
   // Reads the echoPin, returns the sound wave travel time in microseconds
-  //duration1 = pulseIn(3, HIGH);
+
   duration2 = pulseIn(5, HIGH);
   // Calculating the distance
   distance1 = int((duration1/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
   distance2 = int((duration2/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
   //I think this is correct? inverse tan(y/x) x is body_size, to avoid divide by 0 and because angle increases as body size decreases. 
-  //estimated_angle = atan2(body_size,(distance1-distance2));
-  
-  //avg_distance = (distance1 + distance2)/2;
-  
+
 
   float anglef = asin((float(duration2-duration1)/(29.1*2*11)))*(180/3.14159265);
 
   int bx = round( angle); // radians to degrees and rounding
-  //angle = anglef*1+angle*0;
+
 
 
 
@@ -154,6 +150,9 @@ void loop(){
   GyZ=(Wire.read()<<8|Wire.read())/131.0;  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L) (16 bit number stored in 2 8 bit registers)
   //subtract offset 
   GyZ=GyZ-offset;
+
+  //Tracking our current angle relative to the board.
+  zangle = zangle + GyZ*elapsedTime;
   //convert from rad/s to rad
   if(!isnan(anglef)&&!isnan(angle)){
   
@@ -172,7 +171,7 @@ void loop(){
   }
   frontDistance = 130 - target;
 
-  if(SharpIR.distance()<frontDistance){
+  if(SharpIR.getDistance()<frontDistance){
     angle = angle+20;
   }
   angle = angle+0.1*(target-((distance2+distance1)/2));
@@ -213,7 +212,7 @@ void loop(){
     digitalWrite(in3,LOW);
   }
 
-  Serial.print("distance = ");Serial.print(SharpIR.distance());Serial.print("  angle = ");Serial.print(angle);Serial.print("  pid = "); Serial.println(pid);
+  Serial.print("distance = ");Serial.print(SharpIR.getDistance());Serial.print("  angle = ");Serial.print(angle);Serial.print("  zangle = ");Serial.print(zangle);Serial.print("  pid = "); Serial.println(pid);
 
   
 }
