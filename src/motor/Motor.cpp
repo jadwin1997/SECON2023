@@ -1,10 +1,9 @@
-#include <cstdint>
 #include "Arduino.h"
 #include "Motor.h"
 
 Motor::Motor()
 {
-  Motor(255, 255);
+  Motor(255, 255, 255);
 }
 
 Motor::Motor(uint8_t posPin, uint8_t negPin, uint8_t pwmPin)

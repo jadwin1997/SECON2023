@@ -11,9 +11,8 @@ class SerialWrapper {
     SerialWrapper();
     bool start();
     void stop();
-    void read();
-    void write();
-    
+    int read();
+    void write(int x);
 };
 
 #endif // SERIALWRAPPER_H

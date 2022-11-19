@@ -1,4 +1,3 @@
-#include <cstdint>
 #include "Arduino.h"
 
 #ifndef MOTOR_H
@@ -12,7 +11,7 @@ class Motor {
   //! The negative pin.
   uint8_t negPin;
   //! The pwm pin.
-  uint8_t pwmPin
+  uint8_t pwmPin;
 
   //! The current speed of the motor, as an 8bit integer.
   uint8_t speed;
@@ -65,7 +64,7 @@ class Motor {
    * @param speed an integer from 0-255
    * @param reverse true if the motor should reverse, false else
    */
-  void setSpeed(uint8_t speed, boolean reverse)
+  void setSpeed(uint8_t speed, boolean reverse);
 };
 
 #endif // MOTOR_H
