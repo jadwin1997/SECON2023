@@ -11,6 +11,7 @@
 #include <SoftwareSerial.h>
 #include <SharpIR.h>
 
+//#include <Wire.h>
 
 
 class ProtoBoard
@@ -23,17 +24,23 @@ class ProtoBoard
     void driveMotor(int motor_pin, int motor_speed);
     int * updateDistance();
     int16_t updateGyro();
+    int16_t updateAccel();
+    void serialWrite();
+    int serialRead();
+    int updateAngle();
+    
     
     /**
     * @brief I2C address of the MPU-6050
     **/
     const int MPU_addr=0x68;  //
+    int refresh_rate = 20;
     /**
     * @brief Acceleration felt by gyro
     **/
     int16_t GyZ;
-
-
+  
+    float Ax,Ay,Az;
     float elapsedTime, currentTime, previousTime,angle = 0.0, target_angle,offset = 0;
 
     //target speed to go straight.
@@ -49,7 +56,11 @@ class ProtoBoard
     * @brief time for ping to comeback to ultrasonic sensor 2 (more accurate)
     **/
     long duration2; // Ping duration for sensor 2
-
+    float kalman_angle = 0;
+    float kalman_distance1 = 0;
+    float kalman_distance2 = 0;
+    float kalman_duration1 = 0;
+    float kalman_duration2 = 0;
     /**
     * @brief Ultrasonic Distance Sensor 1
     **/
