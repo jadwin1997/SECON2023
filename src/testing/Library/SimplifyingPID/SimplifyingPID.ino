@@ -99,7 +99,7 @@ angle = angle * 180 / PI;
 */
   // Print estimated angle
   int distance_error = target_distance-(distances[0]+distances[1])/2;
-  int PID_angle = kP_angle * angle_estimate;
+  
   int PID_distance = kP_distance * distance_error;
 
   if(c < 30){
@@ -112,9 +112,13 @@ angle = angle * 180 / PI;
   bot.kalman_angle = angle_estimate;
   bot.kalman_duration1 = duration1_estimate;
   bot.kalman_duration2 = duration2_estimate;
+
+  angle_estimate = angle_estimate*.5+PID_distance*.2+PID_front_distance*.3;
   
-  int left = target_speed + (PID_angle*.33+PID_distance*.33+PID_front_distance*.33);
-  int right = target_speed - (PID_angle*.33+PID_distance*.33+PID_front_distance*.33);
+  int PID_angle = kP_angle * angle_estimate;
+
+  int left = target_speed + PID_angle;
+  int right = target_speed - PID_angle;
   left = min(left, max_speed);
   right = min(right, max_speed);
   bot.driveMotor(0,left);
