@@ -1,24 +1,7 @@
-
-
 #include "SECON_PROTOBOARD_V1.h"
 const float dt = 0.05;  // Time step
-float angle_estimate;
-float angle_estimate_error;
-float process_noise;
-float measurement_noise;
-float kalman_gain;
-
-float duration1_estimate;
-float duration1_estimate_error;
-float duration1_process_noise;
-float duration1_measurement_noise;
-float duration1_kalman_gain;
-
-float duration2_estimate;
-float duration2_estimate_error;
-float duration2_process_noise;
-float duration2_measurement_noise;
-float duration2_kalman_gain;
+float angle_estimate,angle_estimate_error,process_noise,measurement_noise,kalman_gain,duration1_estimate,duration1_estimate_error,duration1_process_noise,
+duration1_measurement_noise,duration1_kalman_gain,duration2_estimate,duration2_estimate_error,duration2_process_noise,duration2_measurement_noise,duration2_kalman_gain;
 int counter = 0;
 ProtoBoard bot;
 float angle = 0.0;
@@ -28,10 +11,7 @@ int* distances;
 float elapsedTime, currentTime, previousTime, target_angle,offset = 0;
 int pid_old = 0;
 int target_speed = 125;
-int max_speed = 142;
-int kP_angle = 4;
-int kP_distance = 4;
-int kP_front;
+int max_speed = 200;
 void setup() {
   // put your setup code here, to run once:
 bot.setupBoard();
@@ -60,16 +40,28 @@ float angle, angle_estimate;
 
     bot.updateGyro();
     bot.updateAccel();
-  distances = bot.updateDistance();
+    distances = bot.updateDistance();
    int b = distances[3]; //B ultrasonic time value 
    int a = distances[4]; //A ultrasonic time value (using time for more granularity in our measurements)
    int c = distances[2];
+   
+  duration1_estimate_error = duration1_estimate_error + duration1_process_noise * dt;
+  duration1_kalman_gain = duration1_estimate_error / (duration1_estimate_error + duration1_measurement_noise);
+  duration1_estimate = duration1_estimate + duration1_kalman_gain * (b - duration1_estimate);
+  duration1_estimate_error = (1 - duration1_kalman_gain) * duration1_estimate_error;
+
+  duration2_estimate_error = duration2_estimate_error + duration2_process_noise * dt;
+  duration2_kalman_gain = duration2_estimate_error / (duration2_estimate_error + duration2_measurement_noise);
+  duration2_estimate = duration2_estimate + duration2_kalman_gain * (a - duration2_estimate);
+  duration2_estimate_error = (1 - duration2_kalman_gain) * duration2_estimate_error;
+   
    //Serial.print("Ultrasonic 1: ");Serial.print(b);Serial.print(" Ultrasonic 2: ");Serial.print(a);Serial.print(" Front distance sensor: ");Serial.println(c);
    delay(50);
     
    //calculate angle
-   angle = atan2(a - b, 5.0*2.0*29.1);
-angle = angle * 180 / PI;
+   angle = atan2(duration2_estimate - duration1_estimate, 5.0*2.0*29.1);
+   angle = angle * 180 / PI;
+   
 // Apply Kalman filter to estimate angle
 
 // Print estimated angle
@@ -82,15 +74,7 @@ angle = angle * 180 / PI;
   angle_estimate = angle_estimate + kalman_gain * (angle - angle_estimate);
   angle_estimate_error = (1 - kalman_gain) * angle_estimate_error;
 
-  duration1_estimate_error = duration1_estimate_error + duration1_process_noise * dt;
-  duration1_kalman_gain = duration1_estimate_error / (duration1_estimate_error + duration1_measurement_noise);
-  duration1_estimate = duration1_estimate + duration1_kalman_gain * (b - duration1_estimate);
-  duration1_estimate_error = (1 - duration1_kalman_gain) * duration1_estimate_error;
 
-  duration2_estimate_error = duration2_estimate_error + duration2_process_noise * dt;
-  duration2_kalman_gain = duration2_estimate_error / (duration2_estimate_error + duration2_measurement_noise);
-  duration2_estimate = duration2_estimate + duration2_kalman_gain * (a - duration2_estimate);
-  duration2_estimate_error = (1 - duration2_kalman_gain) * duration2_estimate_error;
 /*
     angle_estimate_error = angle_estimate_error + process_noise * dt;
   kalman_gain = angle_estimate_error / (angle_estimate_error + measurement_noise);
@@ -98,35 +82,48 @@ angle = angle * 180 / PI;
   angle_estimate_error = (1 - kalman_gain) * angle_estimate_error;
 */
   // Print estimated angle
-  int distance_error = target_distance-(distances[0]+distances[1])/2;
-  
-  int PID_distance = kP_distance * distance_error;
-
-  if(c < 30){
-    kP_front = 4;
+  int front_PID;
+  if(c <35){
+    front_PID = 150;
   }
   else{
-    kP_front = 0;
+    front_PID = 0;
   }
-  int PID_front_distance = kP_front * (30 - c);
+  
+  int PID = target_distance-distances[0];
+  if(PID > 100||PID<-100){
+    PID=0;
+  }
+  //erial.println(duration1_estimate);
   bot.kalman_angle = angle_estimate;
   bot.kalman_duration1 = duration1_estimate;
   bot.kalman_duration2 = duration2_estimate;
-
-  angle_estimate = angle_estimate*.5+PID_distance*.2+PID_front_distance*.3;
-  
-  int PID_angle = kP_angle * angle_estimate;
-
-  int left = target_speed + PID_angle;
-  int right = target_speed - PID_angle;
-  left = min(left, max_speed);
-  right = min(right, max_speed);
+  if(abs((bot.Ay+bot.Ax)/2)>0.22){
+    counter = 0;
+  }
+  else{
+    counter++;
+  }
+  if(counter>60){
+    target_speed++;
+    counter = 0;
+  }
+  if(target_speed>max_speed){
+    target_speed = max_speed;
+  }
+  int left , right = mapMotorSpeed(angle_estimate, PID, front_PID, target_speed);
+  //left= map(115-(-angle_estimate*4)+PID-front_PID, -255, 255, -target_speed, target_speed);
+  //int right = map(115-(angle_estimate*4)-PID+front_PID, -255, 255, -target_speed, target_speed);
   bot.driveMotor(0,left);
   bot.driveMotor(1,right); 
  
  bot.serialWrite();
 }
 
-void setupMotors(){
-  
+int mapMotorSpeed(float angle_estimate, float PID, float front_PID, int target_speed) {
+  int left_speed = map(115 + (-angle_estimate * 5) + PID + front_PID, 
+                       -max_speed, max_speed, -target_speed, target_speed);
+  int right_speed = map(115 - (angle_estimate * 5) - PID + front_PID, 
+                        -max_speed, max_speed, -target_speed, target_speed);
+  return left_speed, right_speed;
 }
