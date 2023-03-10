@@ -194,6 +194,22 @@ int ProtoBoard::updateAngle(){
   return data;
 }
 
+int ProtoBoard::updateVariance(float angle){
+  sum += distance1;
+  sum2 += distance1 * distance1;
+  count++;
+  
+  if (count > 10) {
+    float mean = sum / count;
+    variance = sum2 / count - mean * mean;
+    Serial.print("Variance: ");
+    Serial.println(variance);
+    
+  }
+  return variance;
+}
+
+
 
 
 
