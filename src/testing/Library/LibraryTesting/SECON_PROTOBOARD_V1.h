@@ -26,9 +26,10 @@ class ProtoBoard
     int16_t updateGyro();
     int16_t updateAccel();
     void serialWrite();
+    //void sendDataToSlave(int data);
     int serialRead();
     int updateAngle();
-    
+    int calibration = 0;
     
     /**
     * @brief I2C address of the MPU-6050
@@ -77,12 +78,12 @@ class ProtoBoard
     int distance3; // Calculated distance 3
 
     
-    int leftpwm = 3; /**< pin for motor driver pwm pin*/
-    int rightpwm = 11; /**< pin for motor driver pwm pin*/
-    int in1 = 8; /**< motor driver direction pin */
-    int in2 = 7; /**< motor driver direction pin */
-    int in3 = 4; /**< motor driver direction pin */
-    int in4 = 2; /**< motor driver direction pin */
+    int leftpwm = 11; /**< pin for motor driver pwm pin*/
+    int rightpwm = 3; /**< pin for motor driver pwm pin*/
+    int in1 = 4; /**< motor driver direction pin */
+    int in2 = 2; /**< motor driver direction pin */
+    int in3 = 8; /**< motor driver direction pin */
+    int in4 = 7; /**< motor driver direction pin */
 
   private:
 

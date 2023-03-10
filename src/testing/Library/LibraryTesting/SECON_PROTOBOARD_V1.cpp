@@ -31,10 +31,10 @@ void ProtoBoard::setupBoard(){
   pinMode(in3, OUTPUT); 
   pinMode(in4, OUTPUT); 
 
-  digitalWrite(in1,HIGH);
-  digitalWrite(in2,LOW);
-  digitalWrite(in3,HIGH);
-  digitalWrite(in4,LOW);
+  digitalWrite(in2,HIGH);
+  digitalWrite(in1,LOW);
+  digitalWrite(in4,HIGH);
+  digitalWrite(in3,LOW);
 
   
 
@@ -46,8 +46,13 @@ void ProtoBoard::setupBoard(){
   Serial.begin(9600);
 
   //button
-  
-
+  double calib= 0;
+  for(int x = 0; x< 100; x++){
+    updateGyro();
+    calib = calib + GyZ;
+     
+  }
+  calibration = calib/100;
 }
 
 
@@ -65,6 +70,7 @@ int * ProtoBoard::updateDistance(){
   
   //delayMicroseconds(2);
   duration1 = pulseIn(9, HIGH);
+  delayMicroseconds(100);
   
   digitalWrite(6, LOW);
   delayMicroseconds(2);
@@ -73,7 +79,7 @@ int * ProtoBoard::updateDistance(){
   digitalWrite(6, LOW);
   
   duration2 = pulseIn(5, HIGH);
-  
+  delayMicroseconds(100);
 
   // Calculating the distance
   distance1 = int((duration1/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
@@ -100,9 +106,9 @@ int16_t ProtoBoard::updateGyro(){
   Wire.write(0x47);  // starting with register 0x47 (GYRO_ZOUT)
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_addr,2,true);  // request a total of 2 registers
-  GyZ=(Wire.read()<<8|Wire.read())/131.0;  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L) (16 bit number stored in 2 8 bit registers)
+  GyZ=(Wire.read()<<8|Wire.read())/131.0 - calibration;  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L) (16 bit number stored in 2 8 bit registers)
   //subtract offset 
-  GyZ=GyZ-offset;
+  
   updateAngle();
 }
 
@@ -135,30 +141,31 @@ void ProtoBoard::driveMotor(int motor_pin, int motor_speed){
       motor_speed = 255;
     }
     if(motor_pin == 0){
-      digitalWrite(in1,LOW);
-      digitalWrite(in2,HIGH);     
-      analogWrite(rightpwm,motor_speed);
-      }
-    if(motor_pin > 0){
-      digitalWrite(in3,HIGH);
-      digitalWrite(in4,LOW);      
+      digitalWrite(in2,LOW);
+      digitalWrite(in1,HIGH);     
       analogWrite(leftpwm,motor_speed);
       }
+    if(motor_pin > 0){
+      digitalWrite(in4,HIGH);
+      digitalWrite(in3,LOW);      
+      analogWrite(rightpwm,motor_speed);
+      }
+      
   }
   else{
    if(motor_speed>255){
       motor_speed = 255;
     }
   if(motor_pin == 0){
-    digitalWrite(in1,HIGH);
-    digitalWrite(in2,LOW);
+    digitalWrite(in2,HIGH);
+    digitalWrite(in1,LOW);
 
-    analogWrite(rightpwm,motor_speed);
+    analogWrite(leftpwm,motor_speed);
   }
    if(motor_pin > 0){
-    digitalWrite(in3,LOW);
-    digitalWrite(in4,HIGH);
-    analogWrite(leftpwm,motor_speed);
+    digitalWrite(in4,LOW);
+    digitalWrite(in3,HIGH);
+    analogWrite(rightpwm,motor_speed);
     
   }
   }
@@ -167,7 +174,7 @@ void ProtoBoard::driveMotor(int motor_pin, int motor_speed){
 
 void ProtoBoard::serialWrite(){
   String data = "F"+String(distance3)+"L"+String(distance1)+"R"+String(distance2)+"LD"+String(kalman_duration1)+"RD"+String(kalman_duration2)+"KA"+String(kalman_angle)+"AC"+String((Ay+Ax)/2);
-  Serial.println(data);
+  //Serial.println(data);
 }
 
 int ProtoBoard::serialRead(){
