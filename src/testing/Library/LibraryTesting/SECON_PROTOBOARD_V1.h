@@ -30,13 +30,13 @@ class ProtoBoard
     int serialRead();
     int updateAngle();
     int calibration = 0;
-    int variance = 0;
+    float variance = 0.0;
     int distance0_readings[10];
     int distance1_readings[10];
     int distance2_readings[10];
     int angle_readings[10];
-    int updateVariance(float angle);
-    int sum,sum2,count = 0;
+    void updateVariance(float angle);
+    float sum,sum2,count = 0;
     
     
     /**

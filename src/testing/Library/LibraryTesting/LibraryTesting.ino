@@ -28,13 +28,14 @@ int target_distance = 15;
 int* distances;
 float elapsedTime, currentTime, previousTime, target_angle,offset = 0;
 int pid_old = 0;
-int target_speed = 72;
-
+int target_speed = 85;
+int stuck_counter = 0;
 int old_target_speed = target_speed;
 int max_speed =80;
 int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
+int stuck_loop_counter = 0;
 void setup() {
   if(millis()-timer<1000){
     target_speed = 100;
@@ -127,12 +128,12 @@ angle = angle * 180 / PI;
   if(c <36){
     front_PID = 87;
     
-    target_speed = -15;
+    
     //bot.sendDataToSlave(43);
   }
   else{
     front_PID = 0;
-    target_speed = old_target_speed;  
+    //target_speed = old_target_speed;  
     
   }
   
@@ -174,17 +175,17 @@ angle = angle * 180 / PI;
   }
   fused_angle = 0.6*-PID+0.4*angle_estimate;
   if(front_PID > 0){
-    left = 77+target_speed;
-    right = -77+target_speed;
+    left = target_speed-20;
+    right = -target_speed-20;
   }
   else{
-  left = target_speed-fused_angle*6;//target_speed-(angle_estimate*5)+PID;//map(255-gyro_angle*10,-255,255,-target_speed,target_speed)+front_PID;//map(255//(-angle_estimate*3) +PID - front_PID, -255, 255, -target_speed, target_speed);//
-  right = target_speed+fused_angle*6;//map(255+gyro_angle*10,-255,255,-target_speed,target_speed)-front_PID;//map(255//(angle_estimate*3) -PID + front_PID, -255, 255, -target_speed, target_speed);//
+  left = target_speed-fused_angle*12;//target_speed-(angle_estimate*5)+PID;//map(255-gyro_angle*10,-255,255,-target_speed,target_speed)+front_PID;//map(255//(-angle_estimate*3) +PID - front_PID, -255, 255, -target_speed, target_speed);//
+  right = target_speed+fused_angle*12;//map(255+gyro_angle*10,-255,255,-target_speed,target_speed)-front_PID;//map(255//(angle_estimate*3) -PID + front_PID, -255, 255, -target_speed, target_speed);//
   }
   
   
   String data = "Angle From Wall: "+String(c);
-  Serial.println(gyro_angle);
+  //Serial.println(gyro_angle);
   
 //  if(abs(gyro_angle)>180.0){
 //    left = 0;
@@ -204,19 +205,29 @@ angle = angle * 180 / PI;
 //    
 //  }
 
-
-    if(abs(gyro_angle)>230.0){
-                bot.driveMotor(0,map(target_speed,0,255,0,235));
-    bot.driveMotor(1,map(target_speed,0,255,0,235));
-    
-    delay(1000);
-    bot.driveMotor(0,map(0,0,255,0,235));
-    bot.driveMotor(1,map(0,0,255,0,235));
-    delay(1000);
+    bot.updateVariance((distances[0]+distances[1]+c)/3);
+    if(bot.variance<1.0){
+      stuck_counter++;
     }
     else{
-          bot.driveMotor(0,map(255,0,255,0,245));
-    bot.driveMotor(1,map(255,0,255,0,245));
+      stuck_counter = 0;
+      target_speed = old_target_speed;
+    }
+    if(stuck_counter > 15){
+      target_speed = target_speed + 5;
+      stuck_loop_counter++;
+      stuck_counter = 0;
+      if(stuck_loop_counter > 100){
+        old_target_speed = old_target_speed+1;
+        stuck_loop_counter = 0;
+      }
+    }
+    if(abs(gyro_angle)>230.0){
+     gyro_angle = 0;
+    }
+    else{
+          bot.driveMotor(0,map(left,0,255,0,250));
+    bot.driveMotor(1,map(right,0,255,0,250));
     }
 
  
