@@ -18,12 +18,12 @@ ProtoBoard::ProtoBoard(){
 **/
 void ProtoBoard::setupBoard(){
  
-
+  /*
   pinMode(10, OUTPUT); 
   pinMode(9, INPUT); 
   pinMode(6, OUTPUT); 
   pinMode(5, INPUT); 
-
+   */ 
 
 
   pinMode(in1, OUTPUT); 
@@ -62,14 +62,13 @@ void ProtoBoard::setupBoard(){
 **/
 int * ProtoBoard::updateDistance(){
   static int r[4];
+  /*
   digitalWrite(10, LOW);
   delayMicroseconds(2);
   digitalWrite(10, HIGH);
   delayMicroseconds(4);
   digitalWrite(10, LOW);
-  
-  //delayMicroseconds(2);
-  duration1 = pulseIn(9, HIGH);
+  //duration1 = pulseIn(9, HIGH);
   delayMicroseconds(100);
   
   digitalWrite(6, LOW);
@@ -77,15 +76,17 @@ int * ProtoBoard::updateDistance(){
   digitalWrite(6, HIGH);
   delayMicroseconds(4);
   digitalWrite(6, LOW);
-  
-  duration2 = pulseIn(5, HIGH);
+  //duration2 = pulseIn(5, HIGH);
   delayMicroseconds(100);
+  */
 
   // Calculating the distance
-  distance1 = int((duration1/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
-  distance2 = int((duration2/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
-  distance3 = SharpIR.distance();
+  distance1 = sonar1.ping_cm();//int((duration1/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
+  distance2 = sonar2.ping_cm();//int((duration2/2) / 29.1); // Speed of sound wave divided by 2 (go and back)
+  distance3 = SharpIR.getDistance();
 
+  
+  
   r[0]=distance1;
   r[1]=distance2;
   r[2]=distance3;
@@ -213,9 +214,3 @@ void ProtoBoard::updateVariance(float value) {
     //return 0.0; // Not enough values yet to compute variance
   }
 }
-
-
-
-
-
-

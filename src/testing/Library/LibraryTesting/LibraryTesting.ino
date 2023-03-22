@@ -31,20 +31,14 @@ int pid_old = 0;
 int target_speed = 85;
 int stuck_counter = 0;
 int old_target_speed = target_speed;
-int max_speed =80;
+int max_speed =100;
 int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
 int stuck_loop_counter = 0;
 void setup() {
-  if(millis()-timer<1000){
-    target_speed = 100;
-  }
-  else{
-    target_speed = old_target_speed;
-  }
   // put your setup code here, to run once:
-bot.setupBoard();
+  bot.setupBoard();
   angle_estimate = 0;
   angle_estimate_error = 0;
   process_noise = 0.1;
@@ -173,7 +167,7 @@ angle = angle * 180 / PI;
   if(PID < -10){
     PID = -10;
   }
-  fused_angle = 0.6*-PID+0.4*angle_estimate;
+  fused_angle = 0.6*-PID+0.3*angle_estimate+0.1*gyro_angle;
   if(front_PID > 0){
     left = target_speed-20;
     right = -target_speed-20;
@@ -185,28 +179,10 @@ angle = angle * 180 / PI;
   
   
   String data = "Angle From Wall: "+String(c);
-  //Serial.println(gyro_angle);
-  
-//  if(abs(gyro_angle)>180.0){
-//    left = 0;
-//    right = 0;
-//    bot.driveMotor(0,left);
-//    bot.driveMotor(1,right);
-//    delay(1000);
-//    bot.driveMotor(0,-100);
-//    bot.driveMotor(1,-100);
-//    delay(3000);
-//    left = 0;
-//    right = 0;
-//    bot.driveMotor(0,left);
-//    bot.driveMotor(1,right);
-//    delay(1000);
-//    gyro_angle = 0;
-//    
-//  }
+
 
     bot.updateVariance((distances[0]+distances[1]+c)/3);
-    if(bot.variance<1.0){
+    if(bot.variance<0.9){
       stuck_counter++;
     }
     else{
@@ -226,8 +202,8 @@ angle = angle * 180 / PI;
      gyro_angle = 0;
     }
     else{
-          bot.driveMotor(0,map(left,0,255,0,250));
-    bot.driveMotor(1,map(right,0,255,0,250));
+          bot.driveMotor(0,map(left,0,255,0,255));
+    bot.driveMotor(1,map(right,0,255,0,255));
     }
 
  

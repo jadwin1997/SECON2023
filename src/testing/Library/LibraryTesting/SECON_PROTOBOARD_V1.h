@@ -10,8 +10,11 @@
 #include "TFMini.h"
 #include <SoftwareSerial.h>
 #include <SharpIR.h>
-
+#include <NewPing.h>
 //#include <Wire.h>
+
+#define SONAR_NUM 3      // Number of sensors.
+#define MAX_DISTANCE 200 // Maximum distance (in cm) to ping.
 
 
 class ProtoBoard
@@ -30,6 +33,9 @@ class ProtoBoard
     int serialRead();
     int updateAngle();
     int calibration = 0;
+    NewPing sonar1 = NewPing(9,10,MAX_DISTANCE);
+    NewPing sonar2 = NewPing(5,6,MAX_DISTANCE);
+    
     float variance = 0.0;
     int distance0_readings[10];
     int distance1_readings[10];
