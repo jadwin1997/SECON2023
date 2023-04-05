@@ -1,7 +1,4 @@
-
-
 #include "SECON_PROTOBOARD_V1.h"
-#include <SoftwareSerial.h>
 const float dt = 0.05;  // Time step
 float angle_estimate;
 float angle_estimate_error;
@@ -25,26 +22,19 @@ ProtoBoard bot;
 float angle = 0.0;
 float gyro_angle = 0.0;
 int bot_size = 12; //9cm is distance from sensor to sensor C
-int target_distance = 16;
+int target_distance = 15;
 int* distances;
-
 float elapsedTime, currentTime, previousTime, target_angle,offset = 0;
 int pid_old = 0;
-int target_speed = 80;
+int target_speed = 85;
 int stuck_counter = 0;
 int old_target_speed = target_speed;
-int max_speed =110;
+int max_speed =100;
 int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
 int stuck_loop_counter = 0;
-//SoftwareSerial softSerial = SoftwareSerial(13,12);
-float Kp = 0.8;
-int prev_error = 0;
 void setup() {
-  pinMode(12,OUTPUT);
-  pinMode(13,INPUT);
-  //softSerial.begin(9600);
   // put your setup code here, to run once:
   bot.setupBoard();
   angle_estimate = 0;
@@ -75,11 +65,8 @@ double old_time_2 = millis();
 double new_time_2 = 0;
 
 double time_elapsed_2 = 0;
-int distance_diff_error;
+
 void loop() {
-  distance_diff_error = 0;//calibrateDistance();
-  while(1==1){
-    
   
   float duration1, distance1, duration2, distance2;
 float angle, angle_estimate;
@@ -99,7 +86,7 @@ float angle, angle_estimate;
    
     
    //calculate angle
-   angle = atan2(b-a-distance_diff_error, bot_size*2.0*29.1);
+   angle = atan2(b-a, bot_size*2.0*29.1);
 angle = angle * 180 / PI;
 // Apply Kalman filter to estimate angle
 
@@ -130,14 +117,13 @@ angle = angle * 180 / PI;
 */
   // Print estimated angle
   int front_PID;
-  if(c <35){
-    front_PID = c;
-    //softSerial.print(1);
+  if(c <36){
+    front_PID = 87;
+    
     
     //bot.sendDataToSlave(43);
   }
   else{
-    //softSerial.print(0);
     front_PID = 0;
     //target_speed = old_target_speed;  
     
@@ -170,30 +156,31 @@ angle = angle * 180 / PI;
   
   
   //gyro_angle = gyro_angle*0.2+angle_estimate*0.5-PID*0.3;
-
-  int error = (target_distance-(distances[1]));
-  if(abs(error) < 2){
-    error = 0;
+  int left;
+  int right;
+  int PID = (target_distance-((distances[0]+distances[1])/2));
+  if(PID > 10){
+    PID = 10;
   }
-  int delta_error = error - prev_error;
-  int PD = Kp*error+(1-Kp)*delta_error;
-  
-  fused_angle = -PD*0.9+bot.kalman_angle*0.1;
-  fused_angle = constrain(fused_angle,-15,15);
-  int left = target_speed - fused_angle*6;
-  int right = target_speed + fused_angle *6;
-  
-  if(front_PID>0){
-    front_PID = constrain(front_PID,19,35);
-    left = map(front_PID,25,19,target_speed,0)+(4*(35-front_PID));
-    right = map(front_PID,25,19,target_speed,0)-(4*(35-front_PID));
+  if(PID < -10){
+    PID = -10;
   }
+  fused_angle = 0.6*-PID+0.3*angle_estimate+0.1*gyro_angle;
+  if(front_PID > 0){
+    left = target_speed-20;
+    right = -target_speed-20;
+  }
+  else{
+  left = target_speed-fused_angle*12;//target_speed-(angle_estimate*5)+PID;//map(255-gyro_angle*10,-255,255,-target_speed,target_speed)+front_PID;//map(255//(-angle_estimate*3) +PID - front_PID, -255, 255, -target_speed, target_speed);//
+  right = target_speed+fused_angle*12;//map(255+gyro_angle*10,-255,255,-target_speed,target_speed)-front_PID;//map(255//(angle_estimate*3) -PID + front_PID, -255, 255, -target_speed, target_speed);//
+  }
+  
   
   String data = "Angle From Wall: "+String(c);
 
 
     bot.updateVariance((distances[0]+distances[1]+c)/3);
-    if(bot.variance<2.00){
+    if(bot.variance<0.9){
       stuck_counter++;
     }
     else{
@@ -201,32 +188,23 @@ angle = angle * 180 / PI;
       target_speed = old_target_speed;
     }
     if(stuck_counter > 15){
-      target_speed = target_speed + 4;
+      target_speed = target_speed + 5;
       stuck_loop_counter++;
       stuck_counter = 0;
-      if(stuck_loop_counter > 300){
-        //old_target_speed = old_target_speed+2;
+      if(stuck_loop_counter > 100){
+        old_target_speed = old_target_speed+1;
         stuck_loop_counter = 0;
       }
     }
-
-      //softSerial.print(0);
+    if(abs(gyro_angle)>230.0){
+     gyro_angle = 0;
+    }
+    else{
           bot.driveMotor(0,map(left,0,255,0,255));
     bot.driveMotor(1,map(right,0,255,0,255));
-
+    }
 
  
- bot.serialWrite(left, right);
-  }
+ //bot.serialWrite();
+  
 }
-
-int calibrateDistance(){
-  int sum = 0;
-  for(int x = 0; x < 5; x++){
-    delay(40);
-    distances = bot.updateDistance();
-    sum = sum + (distances[3]-distances[4]);
-  }
-  return sum/5;
-}
-
