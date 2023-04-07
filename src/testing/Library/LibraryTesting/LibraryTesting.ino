@@ -23,9 +23,11 @@ float duration2_kalman_gain;
 int counter = 0;
 ProtoBoard bot;
 float angle = 0.0;
+int red = 0;
+int green = 0;
 float gyro_angle = 0.0;
 int bot_size = 12; //9cm is distance from sensor to sensor C
-int target_distance = 16;
+int target_distance = 13;
 int* distances;
 
 float elapsedTime, currentTime, previousTime, target_angle,offset = 0;
@@ -38,13 +40,13 @@ int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
 int stuck_loop_counter = 0;
-//SoftwareSerial softSerial = SoftwareSerial(13,12);
+SoftwareSerial softSerial = SoftwareSerial(13,12);
 float Kp = 0.8;
 int prev_error = 0;
 void setup() {
   pinMode(12,OUTPUT);
   pinMode(13,INPUT);
-  //softSerial.begin(9600);
+  softSerial.begin(9600);
   // put your setup code here, to run once:
   bot.setupBoard();
   angle_estimate = 0;
@@ -78,6 +80,7 @@ double time_elapsed_2 = 0;
 int distance_diff_error;
 void loop() {
   distance_diff_error = 0;//calibrateDistance();
+  delay(2000);
   while(1==1){
     
   
@@ -130,7 +133,7 @@ angle = angle * 180 / PI;
 */
   // Print estimated angle
   int front_PID;
-  if(c <35){
+  if(c <50){
     front_PID = c;
     //softSerial.print(1);
     
@@ -172,28 +175,35 @@ angle = angle * 180 / PI;
   //gyro_angle = gyro_angle*0.2+angle_estimate*0.5-PID*0.3;
 
   int error = (target_distance-(distances[1]));
-  if(abs(error) < 2){
-    error = 0;
-  }
+
   int delta_error = error - prev_error;
   int PD = Kp*error+(1-Kp)*delta_error;
   
-  fused_angle = -PD*0.9+bot.kalman_angle*0.1;
-  fused_angle = constrain(fused_angle,-15,15);
-  int left = target_speed - fused_angle*6;
-  int right = target_speed + fused_angle *6;
-  
+  //fused_angle = -PD*0.9+bot.kalman_angle*0.1;
+  //fused_angle = constrain(fused_angle,-90,90);
+  //eft = map(fused_angle,0,90,target_speed,0);
+
   if(front_PID>0){
-    front_PID = constrain(front_PID,19,35);
-    left = map(front_PID,25,19,target_speed,0)+(4*(35-front_PID));
-    right = map(front_PID,25,19,target_speed,0)-(4*(35-front_PID));
+  fused_angle = fused_angle-2;
+  //fused_angle = (-PD*0.9+bot.kalman_angle*0.1)-10;
+  fused_angle = constrain(fused_angle,-45,45);
   }
+  else{
+  fused_angle = -PD*0.9+bot.kalman_angle*0.1;
+  fused_angle = constrain(fused_angle,-38,38);
+  }
+  int left = map(abs(fused_angle),0,45,target_speed,-15) - fused_angle*3;
+  int right = map(abs(fused_angle),0,45,target_speed,-15) + fused_angle *3;
+  left = constrain(left,-255,255);
+  right = constrain(right, -255,255);
+  
+
   
   String data = "Angle From Wall: "+String(c);
 
 
-    bot.updateVariance((distances[0]+distances[1]+c)/3);
-    if(bot.variance<2.00){
+    bot.updateVariance((distances[0]+distances[1])/2);
+    if(bot.variance<10.00){
       stuck_counter++;
     }
     else{
@@ -204,6 +214,11 @@ angle = angle * 180 / PI;
       target_speed = target_speed + 4;
       stuck_loop_counter++;
       stuck_counter = 0;
+      bot.driveMotor(0,250);
+      bot.driveMotor(1,250);
+      delay(50);
+      bot.driveMotor(0,0);
+      bot.driveMotor(1,0);
       if(stuck_loop_counter > 300){
         //old_target_speed = old_target_speed+2;
         stuck_loop_counter = 0;
@@ -211,12 +226,55 @@ angle = angle * 180 / PI;
     }
 
       //softSerial.print(0);
-          bot.driveMotor(0,map(left,0,255,0,255));
-    bot.driveMotor(1,map(right,0,255,0,255));
+          bot.driveMotor(0,left);
+    bot.driveMotor(1,right);
 
 
  
- bot.serialWrite(left, right);
+ bot.serialWrite(left, right,gyro_angle);
+ if(gyro_angle < -35 && red == 0){
+  bot.driveMotor(0,0);
+  bot.driveMotor(1,0);
+  delay(1000);
+  bot.driveMotor(0,-100);
+  bot.driveMotor(1,-100);
+  delay(1000);
+  softSerial.print(2);
+  delay(1000);
+  red = 1;
+ }
+ if(gyro_angle <-80 && green == 0){
+  bot.driveMotor(0,0);
+  bot.driveMotor(1,0);
+  delay(1000);
+  bot.driveMotor(0,-100);
+  bot.driveMotor(1,-100);
+  delay(1000);
+  softSerial.print(3);
+  delay(1000);
+  green = 1;
+  
+ }
+ if(gyro_angle < -210){
+  gyro_angle = 360-210;
+   
+      bot.driveMotor(0,0);
+   bot.driveMotor(1,0);
+   delay(1000);
+   softSerial.print(1);
+   delay(2000);
+   bot.driveMotor(0,0);
+   bot.driveMotor(1,0);
+   delay(2000);
+  
+    bot.driveMotor(0,-120);
+   bot.driveMotor(1,-120);
+   delay(1500); 
+   target_distance = target_distance + 3;
+ }
+ else{
+  softSerial.print(0);
+ }
   }
 }
 
