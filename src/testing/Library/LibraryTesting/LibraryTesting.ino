@@ -265,9 +265,9 @@ angle = angle * 180 / PI;
   gyro_angle = -180.0;
   green = 1;
  }
- if(gyro_angle < -245){
+ if(gyro_angle < -275){
   deposit_count++;
-  gyro_angle = 360-230;
+  gyro_angle = 360-290;
   gyro_angle = gyro_angle +5;
       bot.driveMotor(0,0);
    bot.driveMotor(1,0);
