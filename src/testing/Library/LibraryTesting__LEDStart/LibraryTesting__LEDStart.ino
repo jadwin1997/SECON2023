@@ -30,6 +30,7 @@ float angle = 0.0;
 int red ;
 int green ;
 int deposit_count;
+
 float gyro_angle = 0.0;
 int bot_size = 12; //9cm is distance from sensor to sensor C
 int target_distance = 12;
@@ -45,6 +46,7 @@ int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
 int stuck_loop_counter = 0;
+int LED_working = 0;
 SoftwareSerial softSerial = SoftwareSerial(13,12);
 float Kp = 0.8;
 int prev_error = 0;
@@ -73,6 +75,7 @@ void setup() {
   duration2_kalman_gain = 0;
   for(int y = 0; y<10; y++){
     if(TCS_color.begin()){
+      LED_working = 1;
       break;
     }
     
@@ -90,12 +93,13 @@ double new_time_2 = 0;
 double time_elapsed_2 = 0;
 int distance_diff_error;
 void loop() {
+  
   distance_diff_error = 0;//calibrateDistance();
   deposit_count = 0;
   red = 0;
   green = 0;
   int red_color_sensing = 0;
-  while(1==1){
+  while(1==1 && LED_working == 1){
         uint16_t red, green, blue, clear;
     TCS_color.getRGBC(&red, &green, &blue, &clear);
     TCS_color.lock();
@@ -293,7 +297,7 @@ angle = angle * 180 / PI;
  if(gyro_angle < -275){
   deposit_count++;
   gyro_angle = 360-290;
-  gyro_angle = gyro_angle - 10;
+  gyro_angle = gyro_angle - 12;
   
       bot.driveMotor(0,0);
    bot.driveMotor(1,0);
