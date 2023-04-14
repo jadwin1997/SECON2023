@@ -2,6 +2,9 @@
 
 #include "SECON_PROTOBOARD_V1.h"
 #include <SoftwareSerial.h>
+#include "DFRobot_TCS34725.h"
+
+DFRobot_TCS34725 TCS_color = DFRobot_TCS34725(&Wire, TCS34725_ADDRESS,TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 const float dt = 0.05;  // Time step
 float angle_estimate;
@@ -68,6 +71,12 @@ void setup() {
   duration2_process_noise = 0.05;
   duration2_measurement_noise = 0.05;
   duration2_kalman_gain = 0;
+  for(int y = 0; y<10; y++){
+    if(TCS_color.begin()){
+      break;
+    }
+    
+  }
 }
 int target = 27;
 double old_time = 0;
@@ -85,6 +94,22 @@ void loop() {
   deposit_count = 0;
   red = 0;
   green = 0;
+  int red_color_sensing = 0;
+  while(1==1){
+        uint16_t red, green, blue, clear;
+    TCS_color.getRGBC(&red, &green, &blue, &clear);
+    TCS_color.lock();
+    float r = red;
+    r /= clear;
+    r *= 256;
+    Serial.print((int)r, HEX);
+    Serial.println();
+
+        if(r > 0x80){
+      Serial.print("Starting...");
+      break;
+    }
+  }
   while(1==1){
     
   
@@ -258,7 +283,7 @@ angle = angle * 180 / PI;
   bot.driveMotor(1,0);
   delay(1000);
   bot.driveMotor(0,-110);
-  bot.driveMotor(1,-130);
+  bot.driveMotor(1,-135);
   delay(1000);
   softSerial.print(3);
   delay(1000);
