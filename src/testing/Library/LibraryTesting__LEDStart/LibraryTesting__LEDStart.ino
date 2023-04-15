@@ -89,7 +89,7 @@ double time_elapsed = 0;
 
 double old_time_2 = millis();
 double new_time_2 = 0;
-
+int LED_timer = 0;
 double time_elapsed_2 = 0;
 int distance_diff_error;
 void loop() {
@@ -99,7 +99,9 @@ void loop() {
   red = 0;
   green = 0;
   int red_color_sensing = 0;
-  while(1==1 && LED_working == 1){
+  int time_now_LED = millis();
+  
+  while(1==1 && LED_working == 1 ){
         uint16_t red, green, blue, clear;
     TCS_color.getRGBC(&red, &green, &blue, &clear);
     TCS_color.lock();
@@ -112,7 +114,12 @@ void loop() {
         if(r > 0x80){
       Serial.print("Starting...");
       break;
-    }
+      }
+      LED_timer = millis() - time_now_LED;
+      if(LED_timer>10000){
+        break;
+      }
+    
   }
   while(1==1){
     
@@ -166,7 +173,7 @@ angle = angle * 180 / PI;
 */
   // Print estimated angle
   int front_PID;
-  if(c <45){
+  if(c <39){
     front_PID = c;
     //softSerial.print(1);
     
@@ -217,7 +224,7 @@ angle = angle * 180 / PI;
   //eft = map(fused_angle,0,90,target_speed,0);
 
   if(front_PID>0){
-  fused_angle = fused_angle-2.5;
+  fused_angle = fused_angle-3;
   //fused_angle = (-PD*0.9+bot.kalman_angle*0.1)-10;
   fused_angle = constrain(fused_angle,-45,45);
   }
@@ -272,22 +279,22 @@ angle = angle * 180 / PI;
   delay(1000);
   bot.driveMotor(0,-130);
   bot.driveMotor(1,-140);
-  delay(200);
+  delay(400);
   softSerial.print(2);
-  delay(1100);
+  delay(900);
   bot.driveMotor(0,0);
   bot.driveMotor(1,0);
   
   delay(1000);
   red = 1;
  }
- if(gyro_angle <-88 && green == 0){
+ if(gyro_angle <-89 && green == 0){
   green = 1;
   bot.driveMotor(0,0);
   bot.driveMotor(1,0);
   delay(1000);
   bot.driveMotor(0,-110);
-  bot.driveMotor(1,-135);
+  bot.driveMotor(1,-130);
   delay(1000);
   softSerial.print(3);
   delay(1000);
@@ -297,15 +304,15 @@ angle = angle * 180 / PI;
  if(gyro_angle < -275){
   deposit_count++;
   gyro_angle = 360-290;
-  gyro_angle = gyro_angle - 12;
+  gyro_angle = gyro_angle - 71;
   
       bot.driveMotor(0,0);
    bot.driveMotor(1,0);
    delay(1000);
    
-   bot.driveMotor(0,-125);
-   bot.driveMotor(1,125);
-   delay(1300);
+   bot.driveMotor(0,-128);
+   bot.driveMotor(1,128);
+   delay(1800);
    bot.driveMotor(0,0);
    bot.driveMotor(1,0);
    
