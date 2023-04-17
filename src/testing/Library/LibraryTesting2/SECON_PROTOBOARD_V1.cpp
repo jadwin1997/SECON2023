@@ -115,7 +115,7 @@ int16_t ProtoBoard::updateGyro(){
   Wire.write(0x47);  // starting with register 0x47 (GYRO_ZOUT)
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_addr,2,true);  // request a total of 2 registers
-  GyZ=(Wire.read()<<8|Wire.read())/131.0;// - calibration;  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L) (16 bit number stored in 2 8 bit registers)
+  GyZ=(Wire.read()<<8|Wire.read())/131.0 - calibration;  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L) (16 bit number stored in 2 8 bit registers)
   //subtract offset 
   
   updateAngle();
@@ -181,8 +181,8 @@ void ProtoBoard::driveMotor(int motor_pin, int motor_speed){
   
 }
 
-void ProtoBoard::serialWrite(int left, int right, float angle){
-  String data = " F: "+String(distance3)+" L: "+String(distance1)+" R: "+String(distance2)+" KA: "+String(angle)+" L motor: "+String(left)+" R motor: "+String(right)+" V: "+String(variance);
+void ProtoBoard::serialWrite(int left, int right){
+  String data = " F: "+String(distance3)+" L: "+String(distance1)+" R: "+String(distance2)+" KA: "+String(kalman_angle)+" L motor: "+String(left)+" R motor: "+String(right)+" V: "+String(variance);
   Serial.println(data);
 }
 

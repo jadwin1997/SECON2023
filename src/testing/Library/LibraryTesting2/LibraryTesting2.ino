@@ -1,8 +1,4 @@
-
-
 #include "SECON_PROTOBOARD_V1.h"
-#include <SoftwareSerial.h>
-
 const float dt = 0.05;  // Time step
 float angle_estimate;
 float angle_estimate_error;
@@ -24,31 +20,21 @@ float duration2_kalman_gain;
 int counter = 0;
 ProtoBoard bot;
 float angle = 0.0;
-int red ;
-int green ;
-int deposit_count;
 float gyro_angle = 0.0;
 int bot_size = 12; //9cm is distance from sensor to sensor C
-int target_distance = 12;
+int target_distance = 15;
 int* distances;
-
 float elapsedTime, currentTime, previousTime, target_angle,offset = 0;
 int pid_old = 0;
-int target_speed = 120;
+int target_speed = 85;
 int stuck_counter = 0;
 int old_target_speed = target_speed;
-int max_speed =105;
+int max_speed =100;
 int min_speed =10;
 float fused_angle = 0.0;
 int timer = millis();
 int stuck_loop_counter = 0;
-SoftwareSerial softSerial = SoftwareSerial(13,12);
-float Kp = 0.8;
-int prev_error = 0;
 void setup() {
-  pinMode(12,OUTPUT);
-  pinMode(13,INPUT);
-  softSerial.begin(9600);
   // put your setup code here, to run once:
   bot.setupBoard();
   angle_estimate = 0;
@@ -79,14 +65,8 @@ double old_time_2 = millis();
 double new_time_2 = 0;
 
 double time_elapsed_2 = 0;
-int distance_diff_error;
+
 void loop() {
-  distance_diff_error = 0;//calibrateDistance();
-  deposit_count = 0;
-  red = 0;
-  green = 0;
-  while(1==1){
-    
   
   float duration1, distance1, duration2, distance2;
 float angle, angle_estimate;
@@ -106,7 +86,7 @@ float angle, angle_estimate;
    
     
    //calculate angle
-   angle = atan2(b-a-distance_diff_error, bot_size*2.0*29.1);
+   angle = atan2(b-a, bot_size*2.0*29.1);
 angle = angle * 180 / PI;
 // Apply Kalman filter to estimate angle
 
@@ -137,14 +117,13 @@ angle = angle * 180 / PI;
 */
   // Print estimated angle
   int front_PID;
-  if(c <45){
-    front_PID = c;
-    //softSerial.print(1);
+  if(c <36){
+    front_PID = 87;
+    
     
     //bot.sendDataToSlave(43);
   }
   else{
-    //softSerial.print(0);
     front_PID = 0;
     //target_speed = old_target_speed;  
     
@@ -177,37 +156,31 @@ angle = angle * 180 / PI;
   
   
   //gyro_angle = gyro_angle*0.2+angle_estimate*0.5-PID*0.3;
-
-  int error = (target_distance-(distances[1]));
-
-  int delta_error = error - prev_error;
-  int PD = Kp*error+(1-Kp)*delta_error;
-  
-  //fused_angle = -PD*0.9+bot.kalman_angle*0.1;
-  //fused_angle = constrain(fused_angle,-90,90);
-  //eft = map(fused_angle,0,90,target_speed,0);
-
-  if(front_PID>0){
-  fused_angle = fused_angle-2.5;
-  //fused_angle = (-PD*0.9+bot.kalman_angle*0.1)-10;
-  fused_angle = constrain(fused_angle,-45,45);
+  int left;
+  int right;
+  int PID = (target_distance-((distances[0]+distances[1])/2));
+  if(PID > 10){
+    PID = 10;
+  }
+  if(PID < -10){
+    PID = -10;
+  }
+  fused_angle = 0.6*-PID+0.3*angle_estimate+0.1*gyro_angle;
+  if(front_PID > 0){
+    left = target_speed-20;
+    right = -target_speed-20;
   }
   else{
-  fused_angle = -PD*0.9+bot.kalman_angle*0.1;
-  fused_angle = constrain(fused_angle,-38,38);
+  left = target_speed-fused_angle*12;//target_speed-(angle_estimate*5)+PID;//map(255-gyro_angle*10,-255,255,-target_speed,target_speed)+front_PID;//map(255//(-angle_estimate*3) +PID - front_PID, -255, 255, -target_speed, target_speed);//
+  right = target_speed+fused_angle*12;//map(255+gyro_angle*10,-255,255,-target_speed,target_speed)-front_PID;//map(255//(angle_estimate*3) -PID + front_PID, -255, 255, -target_speed, target_speed);//
   }
-  int left = map(abs(fused_angle),0,45,target_speed,-15) - fused_angle*3;
-  int right = map(abs(fused_angle),0,45,target_speed,-15) + fused_angle *3;
-  left = constrain(left,-255,255);
-  right = constrain(right, -255,255);
   
-
   
   String data = "Angle From Wall: "+String(c);
 
-    
-    bot.updateVariance((distances[0]+distances[1])/2);
-    if(bot.variance<12.00){
+
+    bot.updateVariance((distances[0]+distances[1]+c)/3);
+    if(bot.variance<0.9){
       stuck_counter++;
     }
     else{
@@ -215,147 +188,23 @@ angle = angle * 180 / PI;
       target_speed = old_target_speed;
     }
     if(stuck_counter > 15){
-      target_speed = target_speed + 4;
+      target_speed = target_speed + 5;
       stuck_loop_counter++;
       stuck_counter = 0;
-      bot.driveMotor(0,225);
-      bot.driveMotor(1,225);
-      delay(50);
-      bot.driveMotor(0,0);
-      bot.driveMotor(1,0);
-      if(stuck_loop_counter > 300){
-        //old_target_speed = old_target_speed+2;
+      if(stuck_loop_counter > 100){
+        old_target_speed = old_target_speed+1;
         stuck_loop_counter = 0;
       }
     }
-
-      //softSerial.print(0);
-          bot.driveMotor(0,left);
-    bot.driveMotor(1,right);
-
+    if(abs(gyro_angle)>230.0){
+     gyro_angle = 0;
+    }
+    else{
+          bot.driveMotor(0,map(left,0,255,0,255));
+    bot.driveMotor(1,map(right,0,255,0,255));
+    }
 
  
- bot.serialWrite(left, right,gyro_angle);
- if(gyro_angle < -47 && red == 0){
-  red = 1;
-  bot.driveMotor(0,0);
-  bot.driveMotor(1,0);
-  delay(1000);
-  bot.driveMotor(0,-130);
-  bot.driveMotor(1,-140);
-  delay(200);
-  softSerial.print(2);
-  delay(1100);
-  bot.driveMotor(0,0);
-  bot.driveMotor(1,0);
+ //bot.serialWrite();
   
-  delay(1000);
-  red = 1;
- }
- if(gyro_angle <-88 && green == 0){
-  green = 1;
-  bot.driveMotor(0,0);
-  bot.driveMotor(1,0);
-  delay(1000);
-  bot.driveMotor(0,-110);
-  bot.driveMotor(1,-130);
-  delay(1000);
-  softSerial.print(3);
-  delay(1000);
-  gyro_angle = -180.0;
-  green = 1;
- }
- if(gyro_angle < -275){
-  deposit_count++;
-  gyro_angle = 360-290;
-  gyro_angle = gyro_angle - 10;
-  
-      bot.driveMotor(0,0);
-   bot.driveMotor(1,0);
-   delay(1000);
-   
-   bot.driveMotor(0,-125);
-   bot.driveMotor(1,125);
-   delay(1300);
-   bot.driveMotor(0,0);
-   bot.driveMotor(1,0);
-   
-   delay(1000);
-
-   bot.driveMotor(0,100);
-   bot.driveMotor(1,100);
-   delay(1200);
-   softSerial.print(1);
-   bot.driveMotor(0,0);
-   bot.driveMotor(1,0);
-   delay(5000);
-    bot.driveMotor(0,-150);
-   bot.driveMotor(1,-50);
-   delay(1100); 
-        bot.driveMotor(0,100);
-   bot.driveMotor(1,100);
-   delay(1300);
-      bot.driveMotor(0,0);
-   bot.driveMotor(1,0);
-   target_distance = target_distance + 15;
-   delay(5000);
-   if(deposit_count >=2){
-    while(1){
-         softSerial.print(1);
-         bot.driveMotor(0,0);
-         bot.driveMotor(1,0);
-         delay(1000);
-    }
-   }
- }
- else{
-  softSerial.print(0);
- }
-  
-  /*
-  if(gyro_angle <-315){
-    if(angle_estimate == 0.00){
-      gyro_angle = 0.0;
-    }
-    
-  }
-  else if(gyro_angle <-225){
-    if(angle_estimate == 0.00){
-      gyro_angle = -270.0;
-    }
-  }
-  else if(gyro_angle <-135){
-    if(angle_estimate == 0.00){
-      gyro_angle = -180.0;
-    }
-  }
-  else if(gyro_angle <-45){
-    if(angle_estimate == 0.00){
-      gyro_angle = -90.0;
-    }
-  }
-  
-  */
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  }
 }
-
-int calibrateDistance(){
-  int sum = 0;
-  for(int x = 0; x < 5; x++){
-    delay(40);
-    distances = bot.updateDistance();
-    sum = sum + (distances[3]-distances[4]);
-  }
-  return sum/5;
-}
-

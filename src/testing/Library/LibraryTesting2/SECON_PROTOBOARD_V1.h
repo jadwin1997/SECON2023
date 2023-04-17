@@ -28,7 +28,7 @@ class ProtoBoard
     int * updateDistance();
     int16_t updateGyro();
     int16_t updateAccel();
-    void serialWrite(int left, int right, float angle);
+    void serialWrite(int left, int right);
     //void sendDataToSlave(int data);
     int serialRead();
     int updateAngle();
